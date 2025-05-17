@@ -82,10 +82,7 @@ def remote_get(filename=""):
         print("Gagal")
         return False
 
-
 if __name__=='__main__':
     server_address=('172.16.16.101',7777)
-    remote_upload('rumusml.png') 
-
-    # List file untuk cek upload
     remote_list()
+    remote_upload('RumusML.png') 
