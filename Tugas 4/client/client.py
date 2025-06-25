@@ -6,7 +6,7 @@ import ssl
 import os
 
 server_address = ('www.its.ac.id', 443)
-server_address = ('www.ietf.org',443)
+server_address = ('172.16.16.101', 8889)
 
 
 def make_socket(destination_address='localhost', port=12000):
@@ -78,6 +78,20 @@ def send_command(command_str, is_secure=False):
         logging.warning(f"error during data receiving {str(ee)}")
         return False
 
+def send_list():
+    cmd = """GET /list HTTP/1.0\r\n\r\n"""
+    return send_command(cmd, is_secure=False)
+
+def send_upload(filename, content):
+    content_bytes = content.encode()
+    content_length = len(content_bytes)
+    cmd = f"""POST /upload HTTP/1.0\r\nFilename: {filename}\r\nContent-Length: {content_length}\r\n\r\n{content}"""
+    return send_command(cmd, is_secure=False)
+
+def send_delete(filename):
+    cmd = f"""DELETE /delete?file={filename} HTTP/1.0\r\n\r\n"""
+    return send_command(cmd, is_secure=False)
+
 #> GET / HTTP/1.1
 #> Host: www.its.ac.id
 #> User-Agent: curl/8.7.1
@@ -85,11 +99,39 @@ def send_command(command_str, is_secure=False):
 #>
 
 if __name__ == '__main__':
-    cmd = f"""GET /rfc/rfc2616.txt HTTP/1.1
-Host: www.ietf.org
-User-Agent: myclient/1.1
-Accept: */*
+    while True:
+        print("1. List Direktori di Server")
+        print("2. Upload File ke Server")
+        print("3. Delete File di Server")
+        print("4. Keluar")
 
-"""
-    hasil = send_command(cmd, is_secure=True)
-    print(hasil)
+        pilihan = input("Masukkan pilihan (1/2/3/4): ")
+
+        if pilihan == '1':
+            hasil = send_list()
+            print("\n[HASIL LIST FILE]:")
+            print(hasil)
+
+        elif pilihan == '2':
+            filename = input("Masukkan nama file yang ingin diupload: ")
+            if not os.path.exists(filename):
+                print("File tidak ditemukan di direktori lokal!")
+                continue
+            with open(filename, 'r') as f:
+                content = f.read()
+            hasil = send_upload(filename, content)
+            print("\n[HASIL UPLOAD]:")
+            print(hasil)
+
+        elif pilihan == '3':
+            filename = input("Masukkan nama file yang ingin dihapus di server: ")
+            hasil = send_delete(filename)
+            print("\n[HASIL DELETE]:")
+            print(hasil)
+
+        elif pilihan == '4':
+            print("Keluar dari client.")
+            break
+
+        else:
+            print("Pilihan tidak valid. Silakan pilih 1/2/3/4.")
